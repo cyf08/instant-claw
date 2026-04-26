@@ -2,6 +2,23 @@
 
 Portable OpenClaw agent packages.
 
+## Requirements
+
+Install OpenClaw and `clawpacker` before importing packages:
+
+```bash
+npm install -g openclaw @cogineai/clawpacker
+```
+
+Verify both CLIs are available:
+
+```bash
+openclaw --version
+clawpacker --version
+```
+
+`clawpacker` does the portable package work here: it imports `.ocpkg.tar.gz` archives into an OpenClaw workspace, writes the agent entry into the target `openclaw.json`, and validates the imported files against the package manifest.
+
 ## General Import
 
 Use this template for any `.ocpkg.tar.gz` package:
