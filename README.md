@@ -98,3 +98,32 @@ OPENCLAW_LIVE_AGENT_TEST=1 ./scripts/test-bioinfo-package.sh
 The live test requires a working OpenClaw model provider. By default it uses `openai-codex/gpt-5.5`; override with `OPENCLAW_TEST_MODEL`.
 
 The package intentionally excludes local credentials, sessions, channel bindings, and runtime provider configuration. Configure models/providers separately on the target OpenClaw instance.
+
+## SJTU WorkAssistant
+
+Package:
+
+```bash
+sjtu-workassistant.ocpkg.tar.gz
+```
+
+Import it into an isolated OpenClaw profile as a `sjtu-workassistant` agent:
+
+```bash
+openclaw --profile sjtu-workassistant-pkg-test config file
+
+clawpacker import ./sjtu-workassistant.ocpkg.tar.gz \
+  --target-workspace "$HOME/.openclaw-sjtu-workassistant-pkg-test/workspace-sjtu-workassistant" \
+  --agent-id sjtu-workassistant \
+  --config "$HOME/.openclaw-sjtu-workassistant-pkg-test/openclaw.json" \
+  --force
+
+clawpacker validate \
+  --target-workspace "$HOME/.openclaw-sjtu-workassistant-pkg-test/workspace-sjtu-workassistant" \
+  --agent-id sjtu-workassistant \
+  --config "$HOME/.openclaw-sjtu-workassistant-pkg-test/openclaw.json"
+```
+
+This package includes the `sjtu-canvas` and `lobster-square` workspace skills from `https://github.com/xhh678876/openclaw-sjtu`, local archive skills from `/home/hpccyf/Projects/skills.zip`: `agent-browser`, `email-mail-master-rose`, `martok9803-reminder-engine`, and `paper-daily-tracker`, plus ClawHub office-document skills: `minimax-docx`, `minimax-xlsx`, `minimax-pdf`, and `pptx-generator`. Configure local credentials such as Canvas tokens, jAccount mail credentials, SMTP/IMAP auth codes, PaperMind keys, Shuiyuan keys, SJTU Date credentials, or Dragon/Lobster Square API keys separately after import; portable packages should not include secrets.
+
+Runtime tools are not bundled by clawpacker. For the MiniMax office-document skills, prepare Python 3, .NET 9 SDK for `minimax-docx`, `python-pptx` and `pillow` for `pptx-generator`, `openpyxl` and `pandas` for `minimax-xlsx`, and LibreOffice/Pandoc where the selected workflow requires them.
