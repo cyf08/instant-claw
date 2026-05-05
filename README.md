@@ -127,3 +127,39 @@ clawpacker validate \
 This package includes the `sjtu-canvas` and `lobster-square` workspace skills from `https://github.com/xhh678876/openclaw-sjtu`, local archive skills from `/home/hpccyf/Projects/skills.zip`: `agent-browser`, `email-mail-master-rose`, `martok9803-reminder-engine`, and `paper-daily-tracker`, plus ClawHub office-document skills: `minimax-docx`, `minimax-xlsx`, `minimax-pdf`, and `pptx-generator`. Configure local credentials such as Canvas tokens, jAccount mail credentials, SMTP/IMAP auth codes, PaperMind keys, Shuiyuan keys, SJTU Date credentials, or Dragon/Lobster Square API keys separately after import; portable packages should not include secrets.
 
 Runtime tools are not bundled by clawpacker. For the MiniMax office-document skills, prepare Python 3, .NET 9 SDK for `minimax-docx`, `python-pptx` and `pillow` for `pptx-generator`, `openpyxl` and `pandas` for `minimax-xlsx`, and LibreOffice/Pandoc where the selected workflow requires them.
+
+Recommended Python setup after import:
+
+```bash
+cd "$HOME/.openclaw-sjtu-workassistant-pkg-test/workspace-sjtu-workassistant"
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install --upgrade pip
+python3 -m pip install \
+  requests beautifulsoup4 python-pptx pdfplumber handright Pillow reportlab \
+  openpyxl pandas PyYAML python-dotenv weasyprint matplotlib playwright
+python3 -m playwright install chromium
+```
+
+Dependency coverage:
+
+- `sjtu-canvas`: `requests`, `beautifulsoup4`, `python-pptx`, `pdfplumber`, `handright`, `Pillow`, `reportlab`.
+- `minimax-xlsx`: `openpyxl`, `pandas`.
+- `pptx-generator`: `python-pptx`, `Pillow`.
+- `paper-daily-tracker`: `requests`, `PyYAML`, `python-dotenv`, `weasyprint`.
+- `minimax-docx` optional helpers: `Pillow`, `matplotlib`, `playwright`.
+- `email-mail-master-rose`: no extra Python packages for basic IMAP/SMTP flows; it uses Python standard-library mail modules.
+
+Optional advanced Shuiyuan RAG dependencies:
+
+```bash
+source .venv/bin/activate
+python3 -m pip install -r skills/sjtu-canvas/scripts/requirements-rag.txt
+```
+
+Optional model-evaluation helpers used by selected SJTU scripts:
+
+```bash
+source .venv/bin/activate
+python3 -m pip install openai anthropic google-generativeai
+```
