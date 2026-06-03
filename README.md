@@ -99,6 +99,53 @@ The live test requires a working OpenClaw model provider. By default it uses `op
 
 The package intentionally excludes local credentials, sessions, channel bindings, and runtime provider configuration. Configure models/providers separately on the target OpenClaw instance.
 
+## Paper Data Review Assistant
+
+Package:
+
+```bash
+paper-data-review-assistant.ocpkg.tar.gz
+```
+
+Import it into an isolated OpenClaw profile as a `paper-data-review-assistant` agent:
+
+```bash
+openclaw --profile paper-data-review-pkg-test config file
+
+clawpacker import ./paper-data-review-assistant.ocpkg.tar.gz \
+  --target-workspace "$HOME/.openclaw-paper-data-review-pkg-test/workspace-paper-data-review-assistant" \
+  --agent-id paper-data-review-assistant \
+  --config "$HOME/.openclaw-paper-data-review-pkg-test/openclaw.json" \
+  --force
+
+clawpacker validate \
+  --target-workspace "$HOME/.openclaw-paper-data-review-pkg-test/workspace-paper-data-review-assistant" \
+  --agent-id paper-data-review-assistant \
+  --config "$HOME/.openclaw-paper-data-review-pkg-test/openclaw.json"
+```
+
+This package includes the `geng-skills`, `paperconan`, `paper-fraud-auditor` (from `research-integrity-auditor`), and `benford-ocsvm-detection` skills for paper source-data and research-integrity screening. It is designed for statistical anomaly triage on paper source tables, PDFs, extracted tables, and Benford/OCSVM-style numeric checks.
+
+Recommended setup after import:
+
+```bash
+cd "$HOME/.openclaw-paper-data-review-pkg-test/workspace-paper-data-review-assistant"
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install --upgrade pip
+python3 -m pip install openpyxl numpy scipy pandas matplotlib scikit-learn pdfplumber reportlab pypdf
+```
+
+For `paperconan`, install the CLI when you want to scan local source-data directories directly:
+
+```bash
+python3 -m pip install paperconan
+# or, from a local clone:
+# python3 -m pip install -e /path/to/paperconan
+```
+
+Configure external credentials separately after import. MinerU tokens, model provider keys, sessions, and local channel bindings are intentionally not included in the package.
+
 ## SJTU WorkAssistant
 
 Package:
