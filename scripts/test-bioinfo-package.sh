@@ -32,6 +32,25 @@ clawpacker validate \
   --config "${CONFIG}" >/tmp/bioinfo-agent-validate.log
 
 openclaw --profile "${PROFILE}" config validate
+
+identity_name="$(python3 - "${CONFIG}" "${AGENT_ID}" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as fh:
+    data = json.load(fh)
+agent_id = sys.argv[2]
+for agent in data.get("agents", {}).get("list", []):
+    if agent.get("id") == agent_id:
+        print(agent.get("identity", {}).get("name") or agent.get("name") or "")
+        break
+PY
+)"
+if [[ "${identity_name}" != "生信小龙虾" ]]; then
+  echo "Bioinformatics package identity mismatch: expected 生信小龙虾, got ${identity_name:-<empty>}" >&2
+  exit 1
+fi
+
 openclaw --profile "${PROFILE}" skills info scanpy >/tmp/bioinfo-agent-scanpy.log
 openclaw --profile "${PROFILE}" skills info biopython >/tmp/bioinfo-agent-biopython.log
 openclaw --profile "${PROFILE}" skills info pydeseq2 >/tmp/bioinfo-agent-pydeseq2.log
