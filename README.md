@@ -91,6 +91,59 @@ openclaw agents list
 
 If `openclaw agents list` shows the imported agent with its own workspace path, it was loaded independently. If the imported files appear under the default workspace, or calls without `--agent <id>` start using the imported behavior, the package was imported into the main/default agent by mistake.
 
+### Binding Message Channels
+
+Importing an agent package does not automatically route chat messages to that agent. If no routing binding exists, inbound channel messages continue to use the default agent, even when the imported agent is present and valid.
+
+Check the current routing state:
+
+```bash
+openclaw agents list
+openclaw agents bindings
+```
+
+Bind a channel account to the imported agent when you want messages from that account to enter the new agent:
+
+```bash
+AGENT_ID="your-agent"
+openclaw agents bind --agent "$AGENT_ID" --bind feishu:default
+openclaw agents bindings
+```
+
+Use the channel/account id that exists on the target OpenClaw instance. For Feishu/Lark deployments this is commonly `feishu:default`, but another account id may be used if multiple accounts are configured.
+
+To test the agent directly without channel routing, call it explicitly:
+
+```bash
+openclaw agent --agent "$AGENT_ID" --message "health check: reply OK" --timeout 180 --json
+```
+
+If inbound message logs show a session key such as `agent:work:feishu:...`, the message is still routed to the default `work` agent. If the logs show the intended agent id but no reply is sent, inspect provider and tool logs separately.
+
+### No-Reply Troubleshooting
+
+If OpenClaw receives a channel message but sends no reply, separate routing problems from model/provider problems:
+
+```bash
+openclaw gateway status
+openclaw health
+openclaw agents list
+openclaw agents bindings
+journalctl --user -u openclaw-gateway.service --since "30 min ago" --no-pager -o cat
+```
+
+Routing symptoms:
+
+- `openclaw agents bindings` shows no bindings.
+- The channel session key uses the default agent, for example `agent:work:feishu:...`.
+- Fix by binding the channel account to the intended agent.
+
+Provider symptoms:
+
+- The message is dispatched to an agent, but logs later show `dispatch complete (replies=0)`.
+- Logs contain model transport errors such as `provider-transport-fetch`, `UND_ERR_SOCKET`, `fetch failed`, long `elapsedMs=600000` timeouts, or repeated `stalled session` diagnostics.
+- Fix by checking the target model provider, network/proxy settings, provider credentials, rate limits, and upstream availability. Restarting the gateway can clear a stuck run, but it does not fix a broken provider endpoint.
+
 ## Bioinformatics Agent
 
 Package:
@@ -188,6 +241,15 @@ python3 -m pip install paperconan
 ```
 
 Configure external credentials separately after import. MinerU tokens, model provider keys, sessions, and local channel bindings are intentionally not included in the package.
+
+To route Feishu/Lark messages to this assistant on an existing OpenClaw instance, bind the channel account after import:
+
+```bash
+openclaw agents bind --agent paper-data-review-assistant --bind feishu:default
+openclaw agents bindings
+```
+
+If `openclaw agents bindings` is empty, messages will continue to enter the default agent instead of `paper-data-review-assistant`.
 
 ## SJTU WorkAssistant
 
