@@ -28,6 +28,7 @@ PACKAGE="./your-agent.ocpkg.tar.gz"
 PROFILE="your-profile"
 AGENT_ID="your-agent"
 WORKSPACE="$HOME/.openclaw-${PROFILE}/workspace-${AGENT_ID}"
+AGENT_DIR="$HOME/.openclaw-${PROFILE}/agents/${AGENT_ID}/agent"
 CONFIG="$HOME/.openclaw-${PROFILE}/openclaw.json"
 
 openclaw --profile "$PROFILE" config file
@@ -35,12 +36,14 @@ openclaw --profile "$PROFILE" config file
 clawpacker import "$PACKAGE" \
   --target-workspace "$WORKSPACE" \
   --agent-id "$AGENT_ID" \
+  --target-agent-dir "$AGENT_DIR" \
   --config "$CONFIG" \
   --force
 
 clawpacker validate \
   --target-workspace "$WORKSPACE" \
   --agent-id "$AGENT_ID" \
+  --target-agent-dir "$AGENT_DIR" \
   --config "$CONFIG"
 
 openclaw --profile "$PROFILE" config validate
@@ -49,6 +52,44 @@ openclaw --profile "$PROFILE" skills list
 ```
 
 After import, configure the target OpenClaw instance's model provider, credentials, channels, and routing separately. Portable packages should not contain local secrets, sessions, or machine-specific runtime configuration.
+
+### Importing As An Independent Agent
+
+To keep an imported package separate from the default/main agent, always give it its own agent id, workspace, and agentDir. The target workspace should not be the default `~/.openclaw/workspace` unless you intentionally want to replace that workspace's files.
+
+For a brand-new isolated profile, the `clawpacker import` command above can create the agent entry in that profile's `openclaw.json`.
+
+For an existing OpenClaw instance, the safest flow is to create the isolated agent first, then import the package into that agent's workspace:
+
+```bash
+AGENT_ID="your-agent"
+WORKSPACE="$HOME/.openclaw/workspace-${AGENT_ID}"
+AGENT_DIR="$HOME/.openclaw/agents/${AGENT_ID}/agent"
+CONFIG="$HOME/.openclaw/openclaw.json"
+
+openclaw agents add "$AGENT_ID" \
+  --workspace "$WORKSPACE" \
+  --agent-dir "$AGENT_DIR" \
+  --non-interactive
+
+clawpacker import "./${AGENT_ID}.ocpkg.tar.gz" \
+  --target-workspace "$WORKSPACE" \
+  --agent-id "$AGENT_ID" \
+  --target-agent-dir "$AGENT_DIR" \
+  --config "$CONFIG" \
+  --force
+
+clawpacker validate \
+  --target-workspace "$WORKSPACE" \
+  --agent-id "$AGENT_ID" \
+  --target-agent-dir "$AGENT_DIR" \
+  --config "$CONFIG"
+
+openclaw gateway restart
+openclaw agents list
+```
+
+If `openclaw agents list` shows the imported agent with its own workspace path, it was loaded independently. If the imported files appear under the default workspace, or calls without `--agent <id>` start using the imported behavior, the package was imported into the main/default agent by mistake.
 
 ## Bioinformatics Agent
 
@@ -115,12 +156,14 @@ openclaw --profile paper-data-review-pkg-test config file
 clawpacker import ./paper-data-review-assistant.ocpkg.tar.gz \
   --target-workspace "$HOME/.openclaw-paper-data-review-pkg-test/workspace-paper-data-review-assistant" \
   --agent-id paper-data-review-assistant \
+  --target-agent-dir "$HOME/.openclaw-paper-data-review-pkg-test/agents/paper-data-review-assistant/agent" \
   --config "$HOME/.openclaw-paper-data-review-pkg-test/openclaw.json" \
   --force
 
 clawpacker validate \
   --target-workspace "$HOME/.openclaw-paper-data-review-pkg-test/workspace-paper-data-review-assistant" \
   --agent-id paper-data-review-assistant \
+  --target-agent-dir "$HOME/.openclaw-paper-data-review-pkg-test/agents/paper-data-review-assistant/agent" \
   --config "$HOME/.openclaw-paper-data-review-pkg-test/openclaw.json"
 ```
 
